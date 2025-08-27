@@ -1,7 +1,6 @@
 import application.NetworkApplication;
 
 /*
- * TODO: test message receiving (with different end of messages) + test what happens with abc\ncba + test sending invalid control message
  * TODO: maybe add pause and pause-toggle commands
  * TODO: finish discover and connect
  * TODO: add control message for when you quit, so others know about it (use removePeer in NetworkHandler)? might not be necessary as handled in network peer now

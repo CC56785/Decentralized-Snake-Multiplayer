@@ -156,23 +156,16 @@ public class NetworkPeer {
 		}
 
 		private void forwardFullMessageAndExtractRemainder(List<byte[]> fullMessage) {
-			if (new String(fullMessage.getLast()).endsWith(END_OF_MESSAGE_INDICATOR)) {
-				String message = extractMessage(fullMessage);
-				String[] noEndIndicator = message.split(END_OF_MESSAGE_INDICATOR);
-				if (noEndIndicator.length != 1) {
-					throw new IllegalStateException("This should never happen!");
-				}
-				networkApplication.getNetworkHandler().handleReceivedMessage(NetworkPeer.this, noEndIndicator[0]);
-				fullMessage.clear();
-			} else {
-				String last = new String(fullMessage.getLast());
-				String[] split = last.split(END_OF_MESSAGE_INDICATOR, 2);
+			String last = new String(fullMessage.getLast());
+			String[] split = last.split(END_OF_MESSAGE_INDICATOR, 2);
 
-				fullMessage.set(fullMessage.size() - 1, split[0].getBytes());
-				String message = extractMessage(fullMessage);
-				networkApplication.getNetworkHandler().handleReceivedMessage(NetworkPeer.this, message);
+			fullMessage.set(fullMessage.size() - 1, split[0].getBytes());
+			String message = extractMessage(fullMessage);
+			networkApplication.getNetworkHandler().handleReceivedMessage(NetworkPeer.this, message);
 
-				fullMessage.clear();
+			fullMessage.clear();
+			if (split.length == 2) {
+				// Already contained the beginning of the next message.
 				fullMessage.add(split[1].getBytes());
 			}
 		}

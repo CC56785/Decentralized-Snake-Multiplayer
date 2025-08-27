@@ -105,7 +105,7 @@ public class ConsoleHandler {
 		print(prefix + message);
 	}
 
-	private void print(String message) {
+	private synchronized void print(String message) {
 		clearCurrentLine();
 		System.out.println(message);
 		if (Thread.currentThread() != consoleHandlerThread) {

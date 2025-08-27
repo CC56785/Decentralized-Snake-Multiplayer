@@ -31,7 +31,7 @@ public class ConnectToControlMessage implements ControlMessage, AsyncCommand {
 		try {
 			app.getNetworkHandler().connectTo(address);
 		} catch (UnknownHostException e) {
-			throw new IllegalArgumentException("This should never happen! The Connect To Control Message contained an illegal address!");
+			throw new IllegalArgumentException("This should never happen! The Connect To Control Message contained an illegal address: " + e.getMessage());
 		}
 	}
 }

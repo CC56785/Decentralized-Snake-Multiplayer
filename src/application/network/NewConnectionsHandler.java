@@ -27,7 +27,7 @@ public class NewConnectionsHandler {
 
 		NetworkPeer networkPeer;
 		try {
-			networkPeer = new NetworkPeer(networkApplication.getNetworkHandler(), address, PORT);
+			networkPeer = new NetworkPeer(networkApplication, address, PORT);
 		} catch (IOException e) {
 			String m = "Something went wrong when trying to connect to %s. No connection has been established.".formatted(address.getHostAddress());
 			networkApplication.getConsoleHandler().printSystemMessage(m);
@@ -74,7 +74,7 @@ public class NewConnectionsHandler {
 		localServerSocket = new ServerSocket(PORT);
 		while (networkApplication.isRunning()) {
 			Socket newPeerSocket = localServerSocket.accept();
-			NetworkPeer newPeer = new NetworkPeer(networkApplication.getNetworkHandler(), newPeerSocket);
+			NetworkPeer newPeer = new NetworkPeer(networkApplication, newPeerSocket);
 			if (!networkApplication.getNetworkHandler().hasConnectionTo(newPeer.getIp())) {
 				networkApplication.getConsoleHandler().printSystemMessage("New Peer at %s has joined the lobby.".formatted(newPeer.getIp()));
 				networkApplication.getNetworkHandler().addNewNetworkPeer(newPeer);

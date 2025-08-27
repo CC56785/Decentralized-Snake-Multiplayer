@@ -1,5 +1,7 @@
 package application.network;
 
+import application.NetworkApplication;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -15,32 +17,31 @@ import java.util.List;
 public class NetworkPeer {
 	private static final String END_OF_MESSAGE_INDICATOR = "\n";
 
-	private final NetworkHandler networkHandler;
+	private final NetworkApplication networkApplication;
 	private final Socket socket;
 
-	private OutputStream out;
 	private boolean isAlive;
 
 	/**
 	 * Creates a new Peer by trying to establish a connection to the passed address.
-	 * @param networkHandler the NetworkHandler that handles this peer
+	 * @param networkApplication the Network Application this peer belongs to
 	 * @param address the address to connect to
 	 * @param port the port to connect to
 	 * @throws IOException when no connection could be established
 	 */
-	public NetworkPeer(NetworkHandler networkHandler, InetAddress address, int port) throws IOException {
-		this.networkHandler = networkHandler;
+	public NetworkPeer(NetworkApplication networkApplication, InetAddress address, int port) throws IOException {
+		this.networkApplication = networkApplication;
 		socket = new Socket(address, port);
 		isAlive = true;
 	}
 
 	/**
 	 * Creates a new Peer associated with the passed socket.
-	 * @param networkHandler the NetworkHandler that handles this peer
+	 * @param networkApplication the Network Application this peer belongs to
 	 * @param socket the socket to the other peer
 	 */
-	public NetworkPeer(NetworkHandler networkHandler, Socket socket) {
-		this.networkHandler = networkHandler;
+	public NetworkPeer(NetworkApplication networkApplication, Socket socket) {
+		this.networkApplication = networkApplication;
 		this.socket = socket;
 		isAlive = true;
 	}
@@ -49,11 +50,6 @@ public class NetworkPeer {
 	 * Activates this Peer, so it can send and receive messages.
 	 */
 	public void initializePeer() {
-		try {
-			out = socket.getOutputStream();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 		new Thread(new MessageReceiver()).start();
 	}
 
@@ -75,6 +71,7 @@ public class NetworkPeer {
 		}
 		String fullMessage = message + END_OF_MESSAGE_INDICATOR;
 		try {
+			OutputStream out = socket.getOutputStream();
 			out.write(fullMessage.getBytes());
 			out.flush();
 		} catch (IOException e) {
@@ -145,7 +142,9 @@ public class NetworkPeer {
 			int first = in.read();
 
 			if (first == -1) {
-				throw new IllegalStateException("Unexpectedly reached end of stream! Other Peer has crashed?");
+				networkApplication.getConsoleHandler().printSystemMessage("Peer %s has disconnected.".formatted(getName()));
+				disconnectPeer();
+				throw new IOException("Peer disconnected.");
 			}
 			byte firstByte = (byte) first;
 
@@ -159,7 +158,7 @@ public class NetworkPeer {
 		private void forwardFullMessageAndExtractRemainder(List<byte[]> fullMessage) {
 			if (new String(fullMessage.getLast()).endsWith(END_OF_MESSAGE_INDICATOR)) {
 				String message = extractMessage(fullMessage);
-				networkHandler.handleReceivedMessage(NetworkPeer.this, message);
+				networkApplication.getNetworkHandler().handleReceivedMessage(NetworkPeer.this, message);
 				fullMessage.clear();
 			} else {
 				String last = new String(fullMessage.getLast());
@@ -167,7 +166,7 @@ public class NetworkPeer {
 
 				fullMessage.set(fullMessage.size() - 1, split[0].getBytes());
 				String message = extractMessage(fullMessage);
-				networkHandler.handleReceivedMessage(NetworkPeer.this, message);
+				networkApplication.getNetworkHandler().handleReceivedMessage(NetworkPeer.this, message);
 
 				fullMessage.clear();
 				fullMessage.add(split[1].getBytes());

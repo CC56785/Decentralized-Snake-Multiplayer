@@ -158,7 +158,11 @@ public class NetworkPeer {
 		private void forwardFullMessageAndExtractRemainder(List<byte[]> fullMessage) {
 			if (new String(fullMessage.getLast()).endsWith(END_OF_MESSAGE_INDICATOR)) {
 				String message = extractMessage(fullMessage);
-				networkApplication.getNetworkHandler().handleReceivedMessage(NetworkPeer.this, message);
+				String[] noEndIndicator = message.split(END_OF_MESSAGE_INDICATOR);
+				if (noEndIndicator.length != 1) {
+					throw new IllegalStateException("This should never happen!");
+				}
+				networkApplication.getNetworkHandler().handleReceivedMessage(NetworkPeer.this, noEndIndicator[0]);
 				fullMessage.clear();
 			} else {
 				String last = new String(fullMessage.getLast());

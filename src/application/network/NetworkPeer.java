@@ -142,8 +142,8 @@ public class NetworkPeer {
 			int first = in.read();
 
 			if (first == -1) {
+				networkApplication.getNetworkHandler().removeNetworkPeer(NetworkPeer.this);
 				networkApplication.getConsoleHandler().printSystemMessage("Peer %s has disconnected.".formatted(getName()));
-				disconnectPeer();
 				throw new IOException("Peer disconnected.");
 			}
 			byte firstByte = (byte) first;

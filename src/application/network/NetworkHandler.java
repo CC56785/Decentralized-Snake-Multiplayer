@@ -13,8 +13,10 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class NetworkHandler {
@@ -23,6 +25,8 @@ public class NetworkHandler {
 	private final DiscoveryHandler discoveryHandler;
 	private final NewConnectionsHandler newConnectionsHandler;
 	private final Set<NetworkPeer> peers;
+
+	private InterfaceAddress localNetworkInterfaceAddress = null;
 
 	public NetworkHandler(NetworkApplication networkApplication) {
 		this.networkApplication = networkApplication;
@@ -47,32 +51,49 @@ public class NetworkHandler {
 
 	public String getLocalIP() {
 		InterfaceAddress interfaceAddress = getLocalInterfaceAddress();
-		if (interfaceAddress != null) {
-			return interfaceAddress.getAddress().getHostAddress();
-		} else {
-			return "?";
-		}
+		return interfaceAddress.getAddress().getHostAddress();
 	}
 
 	private InterfaceAddress getLocalInterfaceAddress() {
+		if (localNetworkInterfaceAddress == null) {
+			initializeLocalInterfaceAddress();
+		}
+		return localNetworkInterfaceAddress;
+	}
+
+	/**
+	 * Sets the local Network Interface Address to a valid Interface. Preferable tries to find a wi-fi Interface.
+	 */
+	private void initializeLocalInterfaceAddress() {
+		Map<NetworkInterface, InterfaceAddress> validAddresses = new HashMap<>();
 		try {
 			List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
 			for (NetworkInterface networkInterface : interfaces) {
-				// Skip down or loop-back interfaces
 				if (!networkInterface.isUp() || networkInterface.isLoopback() || networkInterface.isVirtual()) continue;
 
 				List<InterfaceAddress> addresses = networkInterface.getInterfaceAddresses();
 				for (InterfaceAddress interfaceAddress : addresses) {
 					InetAddress address = interfaceAddress.getAddress();
 					if (address instanceof Inet4Address && !address.isLoopbackAddress()) {
-						return interfaceAddress;
+						validAddresses.put(networkInterface, interfaceAddress);
 					}
 				}
 			}
-			return null;
 		} catch (SocketException e) {
-			return null;
+			throw new RuntimeException("Failed while trying to find a valid Network Interface:" + e);
 		}
+		if (validAddresses.isEmpty()) {
+			throw new RuntimeException("Could not find a valid Network Interface!");
+		}
+		for (NetworkInterface networkInterface : validAddresses.keySet()) {
+			String name = networkInterface.getName().toLowerCase();
+			String desc = networkInterface.getDisplayName().toLowerCase();
+			if (name.contains("wireless") || name.contains("wi-fi") || desc.contains("wireless") || desc.contains("wi-fi")) {
+				localNetworkInterfaceAddress = validAddresses.get(networkInterface);
+				return;
+			}
+		}
+		localNetworkInterfaceAddress = validAddresses.values().toArray(new InterfaceAddress[0])[0];
 	}
 
 	/**

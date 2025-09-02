@@ -13,7 +13,7 @@ import java.net.DatagramSocket;
 public class DiscoveryHandler {
 	private static final String DISCOVERY_MESSAGE = "DISCOVERY_MESSAGE";
 	private static final int INCOMING_MESSAGE_BUFFER_SIZE = 128;
-	private static final int DISCOVERY_PORT = 54322;
+	private static final int DISCOVERY_PORT = 7653;
 
 	private final NetworkApplication networkApplication;
 

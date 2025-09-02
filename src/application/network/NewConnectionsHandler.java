@@ -8,7 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class NewConnectionsHandler {
-	private static final int PORT = 54321;
+	private static final int PORT = 7654;
 
 	private final NetworkApplication networkApplication;
 

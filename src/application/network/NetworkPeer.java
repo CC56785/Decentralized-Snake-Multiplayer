@@ -109,7 +109,8 @@ public class NetworkPeer {
 				receiveMessagesWithExceptions();
 			} catch (IOException e) {
 				if (isAlive) {
-					throw new RuntimeException(e);
+					networkApplication.getNetworkHandler().removeNetworkPeer(NetworkPeer.this);
+					throw new RuntimeException("Peer %s seems to have crashed: ".formatted(getName()) + e);
 				}
 			}
 		}
